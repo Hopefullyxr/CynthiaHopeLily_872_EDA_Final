@@ -4,10 +4,6 @@ author:
 output: html_document
 date: "2024-04-15"
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 \newpage
 \tableofcontents 
 \newpage
@@ -18,13 +14,84 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r setup, include=FALSE}
 # Set your working directory
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(agricolae)
+library(moments)
+library(ggplot2)
+library(ggridges)
+library(viridis)
+library(RColorBrewer)
+library(colormap)
+library(ggthemes)
+library(formatR)
+library(sf)
+library(leaflet)
+library(mapview); mapviewOptions(fgb = FALSE)
+library(here)
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE)
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 4)
+sf::sf_use_s2(FALSE)
 
-# Load your packages
+#Checking directory
+here()
 
 # Set your ggplot theme
+Hope.theme <- theme_base()  + 
+  theme(
+    line = element_line(color = 'darkgreen', linewidth = 2),
+    rect = element_rect(color = 'darkgreen'),
+    text = element_text(size = 12, color = 'darkgreen', face = "italic"),
+    
+    plot.title = element_text(size = 14, color = 'darkgreen', face = "bold", margin=margin(b=8)),
+    axis.text = element_text(size = 12, color = 'darkgreen', face = "italic"),
+    
+    axis.ticks = element_line(color = 'darkgreen'),
+    panel.grid.major =  element_line(color='cornsilk3', size=0.5),
+    panel.grid.minor =  element_blank(),
+    
+    plot.background = element_rect(fill = 'azure2'),
+    panel.background =  element_rect(fill = 'azure2'),
+    legend.background = element_rect(fill = 'azure2'),
+    legend.key = element_rect(fill = 'azure2'),
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.position = 'none',
+    
+    complete = TRUE)
+
+# Set my theme as default theme
+theme_set(Hope.theme)
 
 # Load your datasets
+fall.brief <- read.csv(here("Data/Raw/Atlantic brief squid-fall-survey-points-data.csv"), skip = 3, stringsAsFactors = TRUE)
+summer.brief <- read.csv(here("Data/Raw/Atlantic brief squid-summer-survey-points-data.csv"), skip = 3,  stringsAsFactors = TRUE)
+spring.brief <- read.csv(here("Data/Raw/Atlantic brief squid-spring-survey-points-data.csv"), skip = 3,  stringsAsFactors = TRUE)
+fall.loligo <- read.csv(here("Data/Raw/Loligo-Fall-survey-points-data.csv"), skip = 3, stringsAsFactors = TRUE)
+summer.loligo <- read.csv(here("Data/Raw/Loligo-summer-survey-points-data.csv"), skip = 3, stringsAsFactors = TRUE)
+spring.loligo <- read.csv(here("Data/Raw/Loligo-spring-survey-points-data.csv"), skip = 3, stringsAsFactors = TRUE)
 
+#Data Processing
+fall.brief <- mutate(fall.brief, Season = "Fall")
+summer.brief <- mutate(summer.brief, Season = "Summer")
+spring.brief <- mutate(spring.brief, Season = "Spring")
+brief.squid <- bind_rows(fall.brief, summer.brief, spring.brief)
+
+fall.loligo <- mutate(fall.loligo, Season = "Fall")
+summer.loligo <- mutate(summer.loligo, Season = "Summer")
+spring.loligo <- mutate(spring.loligo, Season = "Spring")
+loligo.squid <- bind_rows(fall.loligo, summer.loligo, spring.loligo)
+
+loligo.squid <- mutate(loligo.squid, Species = "Loligo Squid")
+brief.squid <- mutate(brief.squid, Species = "Atlantic Brief Squid")
+
+squids <- bind_rows(loligo.squid, brief.squid)
+
+#Write out processed data
+write.csv(brief.squid, row.names = FALSE, file = here("Data/Processed/brief-squid.csv"))
+write.csv(loligo.squid, row.names = FALSE, file = here("Data/Processed/loligo-squid.csv"))
+write.csv(squids, row.names = FALSE, file = here("Data/Processed/two-squids.csv"))
 ```
 
 
