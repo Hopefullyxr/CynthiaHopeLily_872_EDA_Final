@@ -1,0 +1,67 @@
+---
+title: "872Final.verson1"
+output: html_document
+date: "2024-04-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+\newpage
+\tableofcontents 
+\newpage
+\listoftables 
+\newpage
+\listoffigures 
+\newpage
+
+```{r setup, include=FALSE}
+# Set your working directory
+
+# Load your packages
+
+# Set your ggplot theme
+
+# Load your datasets
+
+```
+
+
+# Rationale and Research Questions
+
+
+
+\newpage
+
+# Dataset Information
+
+
+
+\newpage
+
+# Exploratory Analysis 
+
+
+
+\newpage
+
+# Analysis
+
+
+
+## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
+
+## Question 2: 
+
+
+
+
+\newpage
+
+# Summary and Conclusions
+
+
+\newpage
+
+# References
+<add references here if relevant, otherwise delete this section> 
