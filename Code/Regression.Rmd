@@ -52,5 +52,9 @@ Hope.theme <- theme_base()  +
     legend.title = element_text(size = 12, face = "bold"),
     legend.position = 'none',
     complete = TRUE)
+```
+
+```{r linear}
+
 
 ```
