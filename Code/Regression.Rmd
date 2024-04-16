@@ -51,6 +51,6 @@ Hope.theme <- theme_base()  +
     legend.key = element_rect(fill = 'azure2'),
     legend.title = element_text(size = 12, face = "bold"),
     legend.position = 'none',
-    
     complete = TRUE)
+
 ```
