@@ -23,6 +23,9 @@ library(sf)
 library(leaflet)
 library(mapview); mapviewOptions(fgb = FALSE)
 library(here)
+library(tseries)
+library(forecast)
+library(cowplot)
 knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE)
 knitr::opts_chunk$set(echo = TRUE)
 options(scipen = 4)
@@ -54,7 +57,43 @@ Hope.theme <- theme_base()  +
     complete = TRUE)
 ```
 
-```{r linear}
+```{r data import, message=FALSE, warning=FALSE}
+at_data <- read_csv("Data/Processed/brief-squid.csv")
+lo_data <- read_csv("Data/Processed/loligo-squid.csv")
+two_data <- read_csv("Data/Processed/two-squids.csv")
+
+two_data$season <- factor(two_data$Season, levels=c(3, 1, 2))
+
+species_list <- split(two_data, two_data$Species)
+
+
+two_data$month <- ifelse(two_data$Season == "Fall", 9,
+                        ifelse(two_data$Season == "Summer", 6,
+                               ifelse(two_data$Season == "Spring", 3, NA)))
 
 
 ```
+
+## Analysis
+
+## 1. Atlantic Breif Squid
+### a. Spatial Characteristics
+```{r depth, message=FALSE, warning=FALSE}
+tmodel <- lm(data = two_data, wtcpue ~ Depth)
+summary(tmodel)
+amodel <- lm(data = at_data, wtcpue ~ Depth)
+summary(amodel)
+lmodel <- lm(data = lo_data, wtcpue ~ Depth)
+summary(lmodel)
+```
+
+```{r depth, message=FALSE, warning=FALSE}
+ggplot(data = at_data, aes(y=Depth, x=wtcpue, color = Season))+
+  geom_point(alpha=0.7,size=0.7)+
+  geom_smooth(method = "lm", se = FALSE, size=0.7)+
+  scale_y_reverse()+
+  labs(title = "Vertical Distribution of Atlantic Brief Squid",
+       y = "Depth(m)",
+       x = "Weight Count per Unit Effort")
+```
+
