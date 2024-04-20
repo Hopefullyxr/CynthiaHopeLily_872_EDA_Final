@@ -61,15 +61,11 @@ Hope.theme <- theme_base()  +
 ```{r data import, message=FALSE, warning=FALSE}
 at_data <- read_csv("Data/Processed/brief-squid.csv") %>% 
   filter(wtcpue!= 0) 
-lo_data <- read_csv("Data/Processed/loligo-squid.csv")%>% 
-  filter(wtcpue!= 0)
-two_data <- read_csv("Data/Processed/two-squids.csv")%>% 
-  filter(wtcpue!= 0)
 ```
 
 ## Analysis
 
-## 1. Atlantic Breif Squid
+## 1. Change in Depth
 ```{r split}
 at_sea <- at_data %>%
   group_by(Season,Year) %>%
@@ -88,6 +84,7 @@ at_spr <- at_data %>%
     mean_cpu = mean(wtcpue, na.rm = TRUE),
     min_cpu = min(wtcpue, na.rm = TRUE),
     max_cpu = max(wtcpue, na.rm = TRUE),
+    max_dep = max(Depth, na.rm = TRUE),
     mean_dep = mean(Depth, na.rm = TRUE)
   ) %>%
   ungroup()
@@ -103,7 +100,8 @@ at_sum <- at_data %>%
     mean_cpu = mean(wtcpue, na.rm = TRUE),
     min_cpu = min(wtcpue, na.rm = TRUE),
     max_cpu = max(wtcpue, na.rm = TRUE),
-    mean_dep = mean(Depth, na.rm = TRUE)
+    mean_dep = mean(Depth, na.rm = TRUE),
+    max_dep = max(Depth, na.rm = TRUE)
   ) %>%
   ungroup()
 
@@ -117,25 +115,16 @@ at_fall <- at_data %>%
     max_lat = max(LAT, na.rm = TRUE),
     mean_cpu = mean(wtcpue, na.rm = TRUE),
     min_cpu = min(wtcpue, na.rm = TRUE),
-    max_cpu = max(wtcpue, na.rm = TRUE)
+    max_cpu = max(wtcpue, na.rm = TRUE),
+    mean_dep = mean(Depth, na.rm = TRUE),
+    max_dep = max(Depth, na.rm = TRUE)
   ) %>%
   ungroup()
 ```
 
-### a. Spatial Characteristics
 ```{r adepth, message=FALSE, warning=FALSE}
-amodel <- lm(data = at_data, wtcpue ~ Depth)
-summary(amodel)
-amodel2 <- lm(data = at_data, Depth ~ Year)
-summary(amodel2)
-
-ggplot(data = at_data, aes(y=Depth, x=wtcpue, color = Season))+
-  geom_point(alpha=0.7,size=0.7)+
-  geom_smooth(method = "lm", se = FALSE, size=0.7)+
-  scale_y_reverse()+
-  labs(title = "Vertical Distribution of Atlantic Brief Squid",
-       y = "Depth(m)",
-       x = "Weight Count per Unit Effort")
+model1 <- lm(data = at_data, Depth ~ Year)
+summary(model1)
 
 # Seasonal plot
 ggplot(at_sea, aes(x = Year, y=mean_dep, color = Season)) +
@@ -151,7 +140,7 @@ ggplot(at_sea, aes(x = Year, y=mean_dep, color = Season)) +
   theme(plot.title = element_text(hjust = 0.5))
 
 ```
-
+## 2. Change in Lantitude
 ```{r alantitude, message=FALSE, warning=FALSE}
 # Spring plot
 ggplot(at_spr, aes(x = Year)) +
@@ -194,25 +183,44 @@ ggplot(at_fall, aes(x = Year)) +
   theme(plot.title = element_text(hjust = 0.5))
 
 ```
+## 3. wtcpue ~ depth
+```{r, message=FALSE, warning=FALSE}
+model2 <- lm(data = at_data, wtcpue ~ Depth)
+summary(model2)
 
-```{r atime, message=FALSE, warning=FALSE}
-# Spring
-
-
-# Summer
-
-
-# Fall
-
+ggplot(data = at_data, aes(y=Depth, x=wtcpue, color = Season))+
+  geom_point(alpha=0.7,size=0.7)+
+  scale_y_reverse()+
+  labs(title = "Vertical Distribution of Atlantic Brief Squid",
+       y = "Depth(m)",
+       x = "Weight Count per Unit Effort")+
+  theme_minimal()+
+  xlim(0,2)
 
 ```
 
+## 4. wtcpue ~ year
+```{r, message=FALSE, warning=FALSE}
+model3 <- lm(data = at_data, wtcpue ~ Year)
+summary(model3)
+
+ggplot(data = at_data, aes(y=wtcpue, x=Year, color = Season))+
+  geom_point(alpha=0.7,size=0.7)+
+  labs(title = "Atlantic Brief Squid",
+       y = "Weight Count per Unit Effort",
+       x = "Year")+
+  theme_minimal()
+```
+## 5. wtcpue ~ season
+
+ONE-WAY ANOVA test
+
+Null Hypothesis: There are no differences in the means of wtcpue among seasons.
+Alternative Hypothesis: There are differences in the means of wtcpue among seasons.
 
 ```{r, message=FALSE, warning=FALSE}
-tmodel <- lm(data = two_data, wtcpue ~ Depth)
-summary(tmodel)
-amodel <- lm(data = at_data, wtcpue ~ Depth)
-summary(amodel)
-lmodel <- lm(data = lo_data, wtcpue ~ Depth)
-summary(lmodel)
+anova_result <- aov(wtcpue ~ Season, data = at_data)
+summary(anova_result)
 ```
+
+
