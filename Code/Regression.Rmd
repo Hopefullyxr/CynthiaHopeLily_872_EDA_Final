@@ -26,6 +26,7 @@ library(here)
 library(tseries)
 library(forecast)
 library(cowplot)
+library(patchwork)
 knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE)
 knitr::opts_chunk$set(echo = TRUE)
 options(scipen = 4)
@@ -58,36 +59,76 @@ Hope.theme <- theme_base()  +
 ```
 
 ```{r data import, message=FALSE, warning=FALSE}
-at_data <- read_csv("Data/Processed/brief-squid.csv")
-lo_data <- read_csv("Data/Processed/loligo-squid.csv")
-two_data <- read_csv("Data/Processed/two-squids.csv")
-
-two_data$season <- factor(two_data$Season, levels=c(3, 1, 2))
-
-species_list <- split(two_data, two_data$Species)
-
-
-two_data$month <- ifelse(two_data$Season == "Fall", 9,
-                        ifelse(two_data$Season == "Summer", 6,
-                               ifelse(two_data$Season == "Spring", 3, NA)))
-
-
+at_data <- read_csv("Data/Processed/brief-squid.csv") %>% 
+  filter(wtcpue!= 0) 
+lo_data <- read_csv("Data/Processed/loligo-squid.csv")%>% 
+  filter(wtcpue!= 0)
+two_data <- read_csv("Data/Processed/two-squids.csv")%>% 
+  filter(wtcpue!= 0)
 ```
 
 ## Analysis
 
 ## 1. Atlantic Breif Squid
-### a. Spatial Characteristics
-```{r depth, message=FALSE, warning=FALSE}
-tmodel <- lm(data = two_data, wtcpue ~ Depth)
-summary(tmodel)
-amodel <- lm(data = at_data, wtcpue ~ Depth)
-summary(amodel)
-lmodel <- lm(data = lo_data, wtcpue ~ Depth)
-summary(lmodel)
+```{r split}
+at_sea <- at_data %>%
+  group_by(Season,Year) %>%
+  mutate(mean_dep = mean(Depth, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Spring
+at_spr <- at_data %>%
+  filter(Season == "Spring") %>%
+  group_by(Year) %>%
+  summarise(
+    mean_lat = mean(LAT, na.rm = TRUE),
+    min_lat = min(LAT, na.rm = TRUE),
+    max_lat = max(LAT, na.rm = TRUE),
+    mean_cpu = mean(wtcpue, na.rm = TRUE),
+    min_cpu = min(wtcpue, na.rm = TRUE),
+    max_cpu = max(wtcpue, na.rm = TRUE),
+    mean_dep = mean(Depth, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Summer
+at_sum <- at_data %>% 
+  filter(Season == "Summer") %>%
+  group_by(Year) %>%
+  summarise(
+    mean_lat = mean(LAT, na.rm = TRUE),
+    min_lat = min(LAT, na.rm = TRUE),
+    max_lat = max(LAT, na.rm = TRUE),
+    mean_cpu = mean(wtcpue, na.rm = TRUE),
+    min_cpu = min(wtcpue, na.rm = TRUE),
+    max_cpu = max(wtcpue, na.rm = TRUE),
+    mean_dep = mean(Depth, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Fall
+at_fall <- at_data %>% 
+  filter(Season == "Fall") %>% 
+   group_by(Year) %>%
+  summarise(
+    mean_lat = mean(LAT, na.rm = TRUE),
+    min_lat = min(LAT, na.rm = TRUE),
+    max_lat = max(LAT, na.rm = TRUE),
+    mean_cpu = mean(wtcpue, na.rm = TRUE),
+    min_cpu = min(wtcpue, na.rm = TRUE),
+    max_cpu = max(wtcpue, na.rm = TRUE)
+  ) %>%
+  ungroup()
 ```
 
-```{r depth, message=FALSE, warning=FALSE}
+### a. Spatial Characteristics
+```{r adepth, message=FALSE, warning=FALSE}
+amodel <- lm(data = at_data, wtcpue ~ Depth)
+summary(amodel)
+amodel2 <- lm(data = at_data, Depth ~ Year)
+summary(amodel2)
+
 ggplot(data = at_data, aes(y=Depth, x=wtcpue, color = Season))+
   geom_point(alpha=0.7,size=0.7)+
   geom_smooth(method = "lm", se = FALSE, size=0.7)+
@@ -95,5 +136,83 @@ ggplot(data = at_data, aes(y=Depth, x=wtcpue, color = Season))+
   labs(title = "Vertical Distribution of Atlantic Brief Squid",
        y = "Depth(m)",
        x = "Weight Count per Unit Effort")
+
+# Seasonal plot
+ggplot(at_sea, aes(x = Year, y=mean_dep, color = Season)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Change in Depth",
+    x = "Year",
+    y = "Depth"
+  ) +
+  scale_y_reverse()+
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
 ```
 
+```{r alantitude, message=FALSE, warning=FALSE}
+# Spring plot
+ggplot(at_spr, aes(x = Year)) +
+  geom_ribbon(aes(ymin = min_lat, ymax = max_lat), fill = "lightblue", alpha = 0.5) +
+  geom_line(aes(y = mean_lat), color = "red") +
+  geom_point(aes(y = mean_lat), color = "red") +
+  labs(
+    title = "Change in Latitude (Spring)",
+    x = "Year",
+    y = "Latitude"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Summer plot
+ggplot(at_sum, aes(x = Year)) +
+  geom_ribbon(aes(ymin = min_lat, ymax = max_lat), fill = "lightblue", alpha = 0.5) +
+  geom_line(aes(y = mean_lat), color = "red") +
+  geom_point(aes(y = mean_lat), color = "red") +
+  labs(
+    title = "Change in Latitude (Summer)",
+    x = "Year",
+    y = "Latitude"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Fall plot
+ggplot(at_fall, aes(x = Year)) +
+  geom_ribbon(aes(ymin = min_lat, ymax = max_lat), fill = "lightblue", alpha = 0.5) +
+  geom_line(aes(y = mean_lat), color = "red") +
+  geom_point(aes(y = mean_lat), color = "red") +
+  labs(
+    title = "Change in Latitude (Fall)",
+    x = "Year",
+    y = "Latitude"
+  ) +
+  xlim(1989, 2020) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r atime, message=FALSE, warning=FALSE}
+# Spring
+
+
+# Summer
+
+
+# Fall
+
+
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+tmodel <- lm(data = two_data, wtcpue ~ Depth)
+summary(tmodel)
+amodel <- lm(data = at_data, wtcpue ~ Depth)
+summary(amodel)
+lmodel <- lm(data = lo_data, wtcpue ~ Depth)
+summary(lmodel)
+```
