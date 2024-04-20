@@ -20,6 +20,7 @@ library(lubridate)
 library(agricolae)
 library(moments)
 library(ggplot2)
+library(GGally)
 library(ggridges)
 library(viridis)
 library(RColorBrewer)
@@ -68,30 +69,18 @@ theme_set(Hope.theme)
 fall.brief <- read.csv(here("Data/Raw/Atlantic brief squid-fall-survey-points-data.csv"), skip = 3, stringsAsFactors = TRUE)
 summer.brief <- read.csv(here("Data/Raw/Atlantic brief squid-summer-survey-points-data.csv"), skip = 3,  stringsAsFactors = TRUE)
 spring.brief <- read.csv(here("Data/Raw/Atlantic brief squid-spring-survey-points-data.csv"), skip = 3,  stringsAsFactors = TRUE)
-fall.loligo <- read.csv(here("Data/Raw/Loligo-Fall-survey-points-data.csv"), skip = 3, stringsAsFactors = TRUE)
-summer.loligo <- read.csv(here("Data/Raw/Loligo-summer-survey-points-data.csv"), skip = 3, stringsAsFactors = TRUE)
-spring.loligo <- read.csv(here("Data/Raw/Loligo-spring-survey-points-data.csv"), skip = 3, stringsAsFactors = TRUE)
 
 #Data Processing
 fall.brief <- mutate(fall.brief, Season = "Fall")
 summer.brief <- mutate(summer.brief, Season = "Summer")
 spring.brief <- mutate(spring.brief, Season = "Spring")
-brief.squid <- bind_rows(fall.brief, summer.brief, spring.brief)
+squids <- bind_rows(fall.brief, summer.brief, spring.brief)
 
-fall.loligo <- mutate(fall.loligo, Season = "Fall")
-summer.loligo <- mutate(summer.loligo, Season = "Summer")
-spring.loligo <- mutate(spring.loligo, Season = "Spring")
-loligo.squid <- bind_rows(fall.loligo, summer.loligo, spring.loligo)
-
-loligo.squid <- mutate(loligo.squid, Species = "Loligo Squid")
-brief.squid <- mutate(brief.squid, Species = "Atlantic Brief Squid")
-
-squids <- bind_rows(loligo.squid, brief.squid)
+class(squids$wtcpue)
+squids <- filter(squids, wtcpue > 0)
 
 #Write out processed data
-write.csv(brief.squid, row.names = FALSE, file = here("Data/Processed/brief-squid.csv"))
-write.csv(loligo.squid, row.names = FALSE, file = here("Data/Processed/loligo-squid.csv"))
-write.csv(squids, row.names = FALSE, file = here("Data/Processed/two-squids.csv"))
+write.csv(squids, row.names = FALSE, file = here("Data/Processed/squids.csv"))
 ```
 
 
@@ -109,7 +98,68 @@ write.csv(squids, row.names = FALSE, file = here("Data/Processed/two-squids.csv"
 
 # Exploratory Analysis 
 
+```{r, message=FALSE}
+ggpairs(squids, columns =c(3, 5, 6, 7, 8),  
+  axisLabels = "show")
+```
 
+#Table 
+#Three Variables
+```{r}
+depth.summary <- squids %>%
+  summarise(Mean=mean(Depth), Median=median(Depth), Max=max(Depth), Min=min(Depth), Skewness=skewness(Depth))
+wtcpue.summary <- squids %>%
+  summarise(Mean=mean(wtcpue), Median=median(wtcpue), Max=max(wtcpue), Min=min(wtcpue), Skewness=skewness(wtcpue))
+latitude.summary <- squids %>%
+  summarise(Mean=mean(LAT), Median=median(LAT), Max=max(LAT), Min=min(LAT), Skewness=skewness(LAT))
+
+variables.summary <- bind_rows(depth.summary, wtcpue.summary, latitude.summary)
+rownames(variables.summary) <- c("Depth", "WTCPUE", "Latitude")
+
+knitr::kable(variables.summary, caption = "Statistical Summary of Variables, Depth, WTCPUE, Latitude")
+```
+#WTCPUE by year
+```{r}
+wtcpue.yearly.summary <- squids %>%
+  group_by(Year) %>% 
+  summarise(Observations=length(wtcpue), Mean=mean(wtcpue), Median=median(wtcpue), Max=max(wtcpue), Min=min(wtcpue), Skewness=skewness(wtcpue))
+
+knitr::kable(wtcpue.yearly.summary, caption = "Statistical Summary of WTCPUE by Year")
+```
+#WTCPUE by season
+```{r}
+wtcpue.seasonal.summary <- squids %>%
+  group_by(Season) %>% 
+  summarise(Observations=length(wtcpue), Mean=mean(wtcpue), Median=median(wtcpue), Max=max(wtcpue), Min=min(wtcpue), Skewness=skewness(wtcpue))
+
+knitr::kable(wtcpue.seasonal.summary, caption = "Statistical Summary of WTCPUE by Season")
+```
+
+
+
+#Map*1989+2019
+```{r}
+squids.1989.sf <- squids %>% 
+ st_as_sf(coords = c('LON','LAT'),
+           crs=4326) %>% 
+  filter(Year==1989)
+
+map1 <- mapview(squids.1989.sf,
+        zcol='Depth',
+        cex='wtcpue')
+
+squids.2019.sf <- squids %>% 
+ st_as_sf(coords = c('LON','LAT'),
+           crs=4326) %>% 
+  filter(Year==2019)
+
+map2 <- mapview(squids.2019.sf,
+        zcol='Depth',
+        cex='wtcpue')
+
+combined_map <- map1 + map2
+combined_map
+```
 
 \newpage
 
