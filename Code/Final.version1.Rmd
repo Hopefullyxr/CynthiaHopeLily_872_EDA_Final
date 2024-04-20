@@ -20,15 +20,21 @@ library(lubridate)
 library(agricolae)
 library(moments)
 library(ggplot2)
+library(ggspatial)
+library(prettymapr)
 library(GGally)
 library(ggridges)
 library(viridis)
 library(RColorBrewer)
 library(colormap)
 library(ggthemes)
+library(gganimate)
+library(gapminder)
+library(magick)
 library(formatR)
 library(sf)
 library(leaflet)
+library(leaflet.extras2)
 library(mapview); mapviewOptions(fgb = FALSE)
 library(here)
 knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE)
@@ -137,28 +143,56 @@ knitr::kable(wtcpue.seasonal.summary, caption = "Statistical Summary of WTCPUE b
 
 
 
-#Map*1989+2019
+#Map
 ```{r}
-squids.1989.sf <- squids %>% 
+squids.sf <- squids %>% 
  st_as_sf(coords = c('LON','LAT'),
-           crs=4326) %>% 
-  filter(Year==1989)
+           crs=4326)
+```
+```{r}
+time.plot <- ggplot() +
+  annotation_map_tile(type = "osm", zoom = 3) +
+  geom_sf(data=squids.sf, aes(color = Depth, size = wtcpue)) +
+  scale_size_continuous(range = c(1, 15), name = "WTCPUE") +
+  scale_color_gradient(low="white", high = "navy")+
+  labs(title = "Distribution Change of Atlantic Brief Squid over Years",
+       caption = "Color: Depth, Size: WTCPUE") +
+  theme_minimal()
+time.plot
 
-map1 <- mapview(squids.1989.sf,
-        zcol='Depth',
-        cex='wtcpue')
+animated.plot <- time.plot + transition_time(Year) +
+  labs(title = "Year: {round(frame_time)}")
 
-squids.2019.sf <- squids %>% 
- st_as_sf(coords = c('LON','LAT'),
-           crs=4326) %>% 
-  filter(Year==2019)
+animate(animated.plot, duration = 50, fps = 2, width = 800, height = 600)
+```
 
-map2 <- mapview(squids.2019.sf,
-        zcol='Depth',
-        cex='wtcpue')
+# Assuming you have an sf object 'data' with columns 'year' and 'wtcpue'
+# The 'year' column should be of type Date or POSIXct
 
-combined_map <- map1 + map2
-combined_map
+# Create the leaflet map
+m <- leaflet(squids) %>% addProviderTiles(providers$OpenStreetMap)
+
+# Create a color palette for WTCPUE values
+pal <- colorNumeric(palette = "viridis", domain = squids$wtcpue)
+
+# Add the WTCPUE data to the map with colors representing the values
+m <- m %>% addCircleMarkers(
+  ~LON, ~LAT, 
+  color = ~pal(wtcpue), 
+  group = ~as.character(Year)
+)
+
+# Add the timeline and timeline control
+m %>% addTimeslider(
+  timelineVar = ~Year,
+  timelineGroup = ~as.character(Year),
+  timelineLabel = ~as.character(Year),
+  timelineOpts = timelineOptions(
+    loopButton = TRUE,
+    playButton = TRUE,
+    enablePlayback = TRUE
+  )
+)
 ```
 
 \newpage
