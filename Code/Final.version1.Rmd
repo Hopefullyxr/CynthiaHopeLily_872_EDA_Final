@@ -3,7 +3,9 @@ title: "872Final.verson1"
 author:
 output: html_document
 date: "2024-04-15"
+toc: true
 ---
+
 \newpage
 \tableofcontents 
 \newpage
@@ -98,20 +100,27 @@ write.csv(squids, row.names = FALSE, file = here("Data/Processed/squids.csv"))
 
 # Dataset Information
 
+Table 1
+```{r, message=F, warning=F, echo=T}
+data.description <- data.frame(ItemName = c("Data Source","Item", "Retrieved From", "Variable Used", "Data Range"),
+  Value = c("NOAA Distribution Mapping and Analysis Portal (DisMAP)", "Atlantic Brief Squid (Lolliguncula brevis) in Southeast US, Fall & Spring & Summer", "https://apps-st.fisheries.noaa.gov/dismap/DisMAP.html", "Lattitude, Longitude, Depth, Year, Weight Catch per unit Effort, Season", "1989~2019"))
+colnames(data.description) <- c("Detail", "Description")
 
-
+knitr::kable(data.description, caption = "Dataset Information", align = c("r", "l"))
+```
 \newpage
 
 # Exploratory Analysis 
 
-```{r, message=FALSE}
-ggpairs(squids, columns =c(3, 5, 6, 7, 8),  
+```{r, message=F, warning=F, echo=T}
+plot1 <- ggpairs(squids, columns =c(3, 5, 6, 7, 8),  
   axisLabels = "show")
 ```
 
-#Table 
-#Three Variables
-```{r}
+## 1.Table
+
+Table 2: Three Variables
+```{r, message=F, warning=F, echo=T}
 depth.summary <- squids %>%
   summarise(Mean=mean(Depth), Median=median(Depth), Max=max(Depth), Min=min(Depth), Skewness=skewness(Depth))
 wtcpue.summary <- squids %>%
@@ -124,16 +133,20 @@ rownames(variables.summary) <- c("Depth", "WTCPUE", "Latitude")
 
 knitr::kable(variables.summary, caption = "Statistical Summary of Variables, Depth, WTCPUE, Latitude")
 ```
-#WTCPUE by year
-```{r}
+
+
+Table 3: WTCPUE by year
+```{r, message=F, warning=F, echo=T}
 wtcpue.yearly.summary <- squids %>%
   group_by(Year) %>% 
   summarise(Observations=length(wtcpue), Mean=mean(wtcpue), Median=median(wtcpue), Max=max(wtcpue), Min=min(wtcpue), Skewness=skewness(wtcpue))
 
 knitr::kable(wtcpue.yearly.summary, caption = "Statistical Summary of WTCPUE by Year")
 ```
-#WTCPUE by season
-```{r}
+
+
+Table 4: WTCPUE by season
+```{r, message=F, warning=F, echo=T}
 wtcpue.seasonal.summary <- squids %>%
   group_by(Season) %>% 
   summarise(Observations=length(wtcpue), Mean=mean(wtcpue), Median=median(wtcpue), Max=max(wtcpue), Min=min(wtcpue), Skewness=skewness(wtcpue))
@@ -142,14 +155,107 @@ knitr::kable(wtcpue.seasonal.summary, caption = "Statistical Summary of WTCPUE b
 ```
 
 
+## 2. Graphing Change in Latitude
 
-#Map
-```{r}
+```{r alantitude, message=F, warning=F, echo=T}
+# Spring
+at_spr <- squids %>%
+  filter(Season == "Spring") %>%
+  group_by(Year) %>%
+  summarise(
+    mean_lat = mean(LAT, na.rm = TRUE),
+    min_lat = min(LAT, na.rm = TRUE),
+    max_lat = max(LAT, na.rm = TRUE),
+    mean_cpu = mean(wtcpue, na.rm = TRUE),
+    min_cpu = min(wtcpue, na.rm = TRUE),
+    max_cpu = max(wtcpue, na.rm = TRUE),
+    max_dep = max(Depth, na.rm = TRUE),
+    mean_dep = mean(Depth, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Summer
+at_sum <- squids %>% 
+  filter(Season == "Summer") %>%
+  group_by(Year) %>%
+  summarise(
+    mean_lat = mean(LAT, na.rm = TRUE),
+    min_lat = min(LAT, na.rm = TRUE),
+    max_lat = max(LAT, na.rm = TRUE),
+    mean_cpu = mean(wtcpue, na.rm = TRUE),
+    min_cpu = min(wtcpue, na.rm = TRUE),
+    max_cpu = max(wtcpue, na.rm = TRUE),
+    mean_dep = mean(Depth, na.rm = TRUE),
+    max_dep = max(Depth, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Fall
+at_fall <- squids %>% 
+  filter(Season == "Fall") %>% 
+   group_by(Year) %>%
+  summarise(
+    mean_lat = mean(LAT, na.rm = TRUE),
+    min_lat = min(LAT, na.rm = TRUE),
+    max_lat = max(LAT, na.rm = TRUE),
+    mean_cpu = mean(wtcpue, na.rm = TRUE),
+    min_cpu = min(wtcpue, na.rm = TRUE),
+    max_cpu = max(wtcpue, na.rm = TRUE),
+    mean_dep = mean(Depth, na.rm = TRUE),
+    max_dep = max(Depth, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Spring plot
+ggplot(at_spr, aes(x = Year)) +
+  geom_ribbon(aes(ymin = min_lat, ymax = max_lat), fill = "lightblue", alpha = 0.5) +
+  geom_line(aes(y = mean_lat), color = "red") +
+  geom_point(aes(y = mean_lat), color = "red") +
+  labs(
+    title = "Change in Latitude (Spring)",
+    x = "Year",
+    y = "Latitude"
+  ) +
+  theme(legend.position = "right")
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Summer plot
+ggplot(at_sum, aes(x = Year)) +
+  geom_ribbon(aes(ymin = min_lat, ymax = max_lat), fill = "lightblue", alpha = 0.5) +
+  geom_line(aes(y = mean_lat), color = "red") +
+  geom_point(aes(y = mean_lat), color = "red") +
+  labs(
+    title = "Change in Latitude (Summer)",
+    x = "Year",
+    y = "Latitude"
+  ) +
+  theme(legend.position = "right")
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Fall plot
+ggplot(at_fall, aes(x = Year)) +
+  geom_ribbon(aes(ymin = min_lat, ymax = max_lat), fill = "lightblue", alpha = 0.5) +
+  geom_line(aes(y = mean_lat), color = "red") +
+  geom_point(aes(y = mean_lat), color = "red") +
+  labs(
+    title = "Change in Latitude (Fall)",
+    x = "Year",
+    y = "Latitude"
+  ) +
+  xlim(1989, 2020) +
+  theme(legend.position = "right")
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+## 3. Maping
+
+```{r, message=F, warning=F, echo=T}
 squids.sf <- squids %>% 
  st_as_sf(coords = c('LON','LAT'),
            crs=4326)
 ```
-```{r}
+```{r, message=F, warning=F, echo=T}
 time.plot <- ggplot() +
   annotation_map_tile(type = "osm", zoom = 3) +
   geom_sf(data=squids.sf, aes(color = Depth, size = wtcpue)) +
@@ -158,7 +264,6 @@ time.plot <- ggplot() +
   labs(title = "Distribution Change of Atlantic Brief Squid over Years",
        caption = "Color: Depth, Size: WTCPUE") +
   theme_minimal()
-time.plot
 
 animated.plot <- time.plot + transition_time(Year) +
   labs(title = "Year: {round(frame_time)}")
@@ -166,52 +271,94 @@ animated.plot <- time.plot + transition_time(Year) +
 animate(animated.plot, duration = 50, fps = 2, width = 800, height = 600)
 ```
 
-# Assuming you have an sf object 'data' with columns 'year' and 'wtcpue'
-# The 'year' column should be of type Date or POSIXct
-
-# Create the leaflet map
-m <- leaflet(squids) %>% addProviderTiles(providers$OpenStreetMap)
-
-# Create a color palette for WTCPUE values
-pal <- colorNumeric(palette = "viridis", domain = squids$wtcpue)
-
-# Add the WTCPUE data to the map with colors representing the values
-m <- m %>% addCircleMarkers(
-  ~LON, ~LAT, 
-  color = ~pal(wtcpue), 
-  group = ~as.character(Year)
-)
-
-# Add the timeline and timeline control
-m %>% addTimeslider(
-  timelineVar = ~Year,
-  timelineGroup = ~as.character(Year),
-  timelineLabel = ~as.character(Year),
-  timelineOpts = timelineOptions(
-    loopButton = TRUE,
-    playButton = TRUE,
-    enablePlayback = TRUE
-  )
-)
-```
-
 \newpage
 
 # Analysis
 
 
+## 1. Depth ~ Year
+<insert specific question here and add additional subsections for additional questions below, if needed>
 
-## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
+```{r, message=F, warning=F, echo=T}
+at_sea <- squids %>%
+  group_by(Season,Year) %>%
+  mutate(mean_dep = mean(Depth, na.rm = TRUE)
+  ) %>%
+  ungroup()
 
-## Question 2: 
+# Seasonal plot
+ggplot(at_sea, aes(x = Year, y=mean_dep, color = Season)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Change in Depth",
+    x = "Year",
+    y = "Depth"
+  ) +
+  scale_y_reverse()+
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(legend.position = "right")
+```
+
+```{r, , message=F, warning=F, echo=T}
+model1 <- lm(data = at_data, Depth ~ Year)
+summary(model1)
+```
 
 
+## 2. wtcpue ~ depth
 
+```{r, message=F, warning=F, echo=T}
+ggplot(data = squids, aes(y=Depth, x=wtcpue, color = Season))+
+  geom_point(alpha=0.7,size=0.7)+
+  scale_y_reverse()+
+  labs(title = "Vertical Distribution of Atlantic Brief Squid",
+       y = "Depth(m)",
+       x = "Weight Count per Unit Effort")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(legend.position = "right")
+  xlim(0,2)
+```
+
+```{r, message=F, warning=F, echo=T}
+model2 <- lm(data = squids, wtcpue ~ Depth)
+summary(model2)
+```
+
+
+## 3. wtcpue ~ year
+
+```{r, message=F, warning=F, echo=T}
+ggplot(data = squids, aes(y=wtcpue, x=Year, color = Season))+
+  geom_point(alpha=0.7,size=0.7)+
+  labs(title = "Atlantic Brief Squid",
+       y = "Weight Count per Unit Effort",
+       x = "Year")+
+ theme(plot.title = element_text(hjust = 0.5))+
+  theme(legend.position = "right")
+```
+
+```{r, message=F, warning=F, echo=T}
+model3 <- lm(data = squids, wtcpue ~ Year)
+summary(model3)
+```
+
+
+## 4. wtcpue ~ season
+
+ONE-WAY ANOVA test
+
+Null Hypothesis: There are no differences in the means of wtcpue among seasons.
+Alternative Hypothesis: There are differences in the means of wtcpue among seasons.
+
+```{r, , message=F, warning=F, echo=T}
+anova_result <- aov(wtcpue ~ Season, data = squids)
+summary(anova_result)
+```
 
 \newpage
 
 # Summary and Conclusions
-
 
 \newpage
 
