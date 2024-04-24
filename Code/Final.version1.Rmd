@@ -1,25 +1,23 @@
+```{css, echo=F}
+body {
+  background-color: #deebf7;
+}
+```
 ---
-title: "872Final.verson1"
+title: "Marine Invertebrate: Atlantic Brief Squid Distribution Analysis"
 author: "Cynthia Zhou, Hope Liu, Lily Zhang"
 date: "2024-04-15"
 output:
   html_document: default
   pdf_document: default
-toc: true
 ---
-
-\newpage
-\tableofcontents 
-\newpage
-\listoftables 
-\newpage
-\listoffigures 
-\newpage
 
 ```{r setup, include=FALSE}
 # Set your working directory
 library(tidyverse)
 library(dplyr)
+library(jpeg)
+library(png)
 library(lubridate)
 library(agricolae)
 library(moments)
@@ -31,6 +29,7 @@ library(ggridges)
 library(viridis)
 library(RColorBrewer)
 library(colormap)
+library(cowplot)
 library(ggthemes)
 library(gganimate)
 library(gapminder)
@@ -68,7 +67,7 @@ Hope.theme <- theme_base()  +
     legend.background = element_rect(fill = 'azure2'),
     legend.key = element_rect(fill = 'azure2'),
     legend.title = element_text(size = 12, face = "bold"),
-    legend.position = 'none',
+    legend.position = 'top',
     
     complete = TRUE)
 
@@ -96,32 +95,49 @@ write.csv(squids, row.names = FALSE, file = here("Data/Processed/squids.csv"))
 
 # Rationale and Research Questions
 
+Climate change is anticipated to bring about significant repercussions for marine life, including declining pH and oxygen, rising temperatures, and shifts in current patterns, affecting a diverse array of marine organisms across phylogenetic groups at both physiological and ecological levels. Cephalopods, constituting a substantial portion of the global mollusk biomass, play pivotal roles in marine food webs, offer essential ecosystem services, and possess significant economic value. Research indicates that cephalopods are susceptible to the impact of climate change, with squids particularly notable for their importance in human consumption, accounting for up to 70% of the cephalopod biomass harvested. 
 
+While most cephalopods are believed to be constrained by physiological and locomotive factors, hindering their presence in shallow, highly fluctuating, euryhaline environments, the Atlantic brief squid, or Lolliguncula brevis, stands out as an exception. This small species of squid in the Loliginidae family demonstrates remarkable adaptability, tolerating low salinities and thriving across a wide a wide range of environmental conditions, commonly found swimming in shallow waters of the western Atlantic Ocean. Such adaptability holds considerable value, especially amid the diverse environmental changes driven by climate change. However, our current understanding of the distribution of L. brevis remains limited. 
 
-\newpage
+Our objective is to enhance our understanding of the spatial and temporal distribution patterns of the Atlantic brief squid in response to changing environmental conditions over a thirty-year period from 1989 to 2019. We gathered existing data from NOAA DisMAP to map the known distribution range of the Atlantic brief squid along the Southeast United States coastline. 
+
+```{r, warning = F, echo=FALSE, fig.width=5, fig.height=4.5}
+photo <- readPNG(here("Data/Raw/squidphoto.jpg"))
+plot(0, 0, type = "n", bg = "#deebf7", axes = FALSE, xlab = "[Figure 1] Photo of Atlantic Brief Squid", ylab = "", xlim = c(1, 0), ylim = c(1, 0))
+rasterImage(photo, 0, 0, 1, 1)
+```
+
 
 # Dataset Information
 
-Table 1
 ```{r, message=F, warning=F, echo=F}
 data.description <- data.frame(ItemName = c("Data Source","Item", "Retrieved From", "Variable Used", "Data Range"),
   Value = c("NOAA Distribution Mapping and Analysis Portal (DisMAP)", "Atlantic Brief Squid (Lolliguncula brevis) in Southeast US, Fall & Spring & Summer", "https://apps-st.fisheries.noaa.gov/dismap/DisMAP.html", "Lattitude, Longitude, Depth, Year, Weight Catch per unit Effort, Season", "1989~2019"))
 colnames(data.description) <- c("Detail", "Description")
 
-knitr::kable(data.description, caption = "Dataset Information", align = c("r", "l"))
+knitr::kable(data.description, caption = "[Table 1] Dataset Information", align = c("r", "l"))
 ```
-\newpage
+
+Our data was sourced from NOAA Distribution Mapping and Analysis Portal (DisMAP), an interactive platform that contains geographical and numerical visualization of several key metrics defining the range and distribution of individual species over time. The raw data were collected by the National Marine Fisheries Service of the National Oceanic and Atmospheric Administration during annual bottom trawl fisheries surveys. We specifically focused on the Atlantic brief squid (Lolliguncula brevis) as the species of interest, within the Southeast US as the study area, NMFS/Rutgers IDW Interpolation as study model/distribution project, and then obtained survey points data for the fall, spring, and summer seasons. 
+
+
+
 
 # Exploratory Analysis 
 
-```{r, message=F, warning=F, echo=F}
-plot1 <- ggpairs(squids, columns =c(3, 5, 6, 7, 8),  
+
+
+```{r, message=F, warning=F, echo=F, fig.height=8, fig.width=12}
+plot1 <- ggpairs(squids, columns =c(3, 5, 6, 7, 8),
+                 title = "[Figure 2] Scatterplot Matrix of all variables",
   axisLabels = "show")
+plot1
 ```
 
-## 1.Table
+## Table
 
-Table 2: Three Variables
+
+
 ```{r, message=F, warning=F, echo=F}
 depth.summary <- squids %>%
   summarise(Mean=mean(Depth), Median=median(Depth), Max=max(Depth), Min=min(Depth), Skewness=skewness(Depth))
@@ -133,33 +149,32 @@ latitude.summary <- squids %>%
 variables.summary <- bind_rows(depth.summary, wtcpue.summary, latitude.summary)
 rownames(variables.summary) <- c("Depth", "WTCPUE", "Latitude")
 
-knitr::kable(variables.summary, caption = "Statistical Summary of Variables, Depth, WTCPUE, Latitude")
+knitr::kable(variables.summary, digits = 2, caption = "[Table 2] Statistical Summary of Variables, Depth, WTCPUE, Latitude")
 ```
 
 
-Table 3: WTCPUE by year
+
 ```{r, message=F, warning=F, echo=F}
 wtcpue.yearly.summary <- squids %>%
   group_by(Year) %>% 
   summarise(Observations=length(wtcpue), Mean=mean(wtcpue), Median=median(wtcpue), Max=max(wtcpue), Min=min(wtcpue), Skewness=skewness(wtcpue))
 
-knitr::kable(wtcpue.yearly.summary, caption = "Statistical Summary of WTCPUE by Year")
+knitr::kable(wtcpue.yearly.summary, digits = 2, caption = "[Table 3] Statistical Summary of WTCPUE by Year")
 ```
 
 
-Table 4: WTCPUE by season
 ```{r, message=F, warning=F, echo=F}
 wtcpue.seasonal.summary <- squids %>%
   group_by(Season) %>% 
   summarise(Observations=length(wtcpue), Mean=mean(wtcpue), Median=median(wtcpue), Max=max(wtcpue), Min=min(wtcpue), Skewness=skewness(wtcpue))
 
-knitr::kable(wtcpue.seasonal.summary, caption = "Statistical Summary of WTCPUE by Season")
+knitr::kable(wtcpue.seasonal.summary, digits = 2, caption = "[Table 4] Statistical Summary of WTCPUE by Season")
 ```
 
 
-## 2. Graphing Change in Latitude
+## Graphing Change in Latitude
 
-```{r alantitude, message=F, warning=F, echo=F}
+```{r, message=F, warning=F, echo=F, cache = F, fig.height=10, fig.width=10}
 # Spring
 at_spr <- squids %>%
   filter(Season == "Spring") %>%
@@ -208,46 +223,51 @@ at_fall <- squids %>%
   ) %>%
   ungroup()
 
-# Spring plot
-ggplot(at_spr, aes(x = Year)) +
-  geom_ribbon(aes(ymin = min_lat, ymax = max_lat), fill = "lightblue", alpha = 0.5) +
-  geom_line(aes(y = mean_lat), color = "red") +
-  geom_point(aes(y = mean_lat), color = "red") +
-  labs(
-    title = "Change in Latitude (Spring)",
-    x = "Year",
-    y = "Latitude"
-  ) +
-  theme(legend.position = "right")
-  theme(plot.title = element_text(hjust = 0.5))
-
-# Summer plot
-ggplot(at_sum, aes(x = Year)) +
-  geom_ribbon(aes(ymin = min_lat, ymax = max_lat), fill = "lightblue", alpha = 0.5) +
-  geom_line(aes(y = mean_lat), color = "red") +
-  geom_point(aes(y = mean_lat), color = "red") +
-  labs(
-    title = "Change in Latitude (Summer)",
-    x = "Year",
-    y = "Latitude"
-  ) +
-  theme(legend.position = "right")
-  theme(plot.title = element_text(hjust = 0.5))
-
 # Fall plot
-ggplot(at_fall, aes(x = Year)) +
+fallplot <- ggplot(at_fall, aes(x = Year)) +
   geom_ribbon(aes(ymin = min_lat, ymax = max_lat), fill = "lightblue", alpha = 0.5) +
   geom_line(aes(y = mean_lat), color = "red") +
   geom_point(aes(y = mean_lat), color = "red") +
   labs(
-    title = "Change in Latitude (Fall)",
+    title = "[Figure 3] Change in Latitude over Years, by Seasons
+    
+    Fall",
     x = "Year",
     y = "Latitude"
   ) +
   xlim(1989, 2020) +
-  theme(legend.position = "right")
+  theme(legend.position = "top", plot.title = element_text(hjust = 0.5))
+
+# Spring plot
+springplot <- ggplot(at_spr, aes(x = Year)) +
+  geom_ribbon(aes(ymin = min_lat, ymax = max_lat), fill = "lightblue", alpha = 0.5) +
+  geom_line(aes(y = mean_lat), color = "red") +
+  geom_point(aes(y = mean_lat), color = "red") +
+  labs(
+    title = "Spring",
+    x = "Year",
+    y = "Latitude"
+  ) +
+    xlim(1989, 2020) +
   theme(plot.title = element_text(hjust = 0.5))
 
+# Summer plot
+summerplot <- ggplot(at_sum, aes(x = Year)) +
+  geom_ribbon(aes(ymin = min_lat, ymax = max_lat), fill = "lightblue", alpha = 0.5) +
+  geom_line(aes(y = mean_lat), color = "red") +
+  geom_point(aes(y = mean_lat), color = "red") +
+  labs(
+    title = "Summer",
+    x = "Year",
+    y = "Latitude"
+  ) +
+    xlim(1989, 2020) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+plot_grid(fallplot, 
+          springplot, 
+          summerplot, 
+          nrow = 3)
 ```
 
 ## 3. Maping
@@ -258,23 +278,135 @@ squids.sf <- squids %>%
            crs=4326)
 ```
 
-```{r, message=F, warning=F, echo=T}
-time.plot <- ggplot() +
-  annotation_map_tile(type = "osm", zoom = 4) +
-  geom_sf(data=squids.sf, aes(color = Depth, size = wtcpue)) +
-  scale_size_continuous(range = c(1, 15), name = "WTCPUE") +
-  scale_color_gradient(low="white", high = "navy")+
-  labs(title = "Distribution Change of Atlantic Brief Squid over Years",
-       caption = "Color: Depth, Size: WTCPUE") +
-  theme_minimal()
+```{r, message=F, warning=F, echo=F, fig.height=8, fig.width=12}
+Year1989 <- squids.sf %>% 
+  filter(Year==1989)
+map1 <- mapview(Year1989, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
 
-animated.plot <- time.plot + transition_time(Year) +
-  labs(title = "Year: {round(frame_time)}")
+Year1990 <- squids.sf %>% 
+  filter(Year==1990)
+map2 <- mapview(Year1990, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
 
-animate(animated.plot, duration = 50, fps = 1, width = 800, height = 600)
+Year1991 <- squids.sf %>% 
+  filter(Year==1991)
+map3 <- mapview(Year1991, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year1992 <- squids.sf %>% 
+  filter(Year==1992)
+map4 <- mapview(Year1992, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year1993 <- squids.sf %>% 
+  filter(Year==1993)
+map5 <- mapview(Year1993, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year1994 <- squids.sf %>% 
+  filter(Year==1994)
+map6 <- mapview(Year1994, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year1995 <- squids.sf %>% 
+  filter(Year==1995)
+map7 <- mapview(Year1995, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year1996 <- squids.sf %>% 
+  filter(Year==1996)
+map8 <- mapview(Year1996, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year1997 <- squids.sf %>% 
+  filter(Year==1997)
+map9 <- mapview(Year1997, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year1998 <- squids.sf %>% 
+  filter(Year==1998)
+map10 <- mapview(Year1998, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year1999 <- squids.sf %>% 
+  filter(Year==1999)
+map11 <- mapview(Year1999, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2000 <- squids.sf %>% 
+  filter(Year==2000)
+map12 <- mapview(Year2000, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2001 <- squids.sf %>% 
+  filter(Year==2001)
+map13 <- mapview(Year2001, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2002 <- squids.sf %>% 
+  filter(Year==2002)
+map14 <- mapview(Year2002, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2003 <- squids.sf %>% 
+  filter(Year==2003)
+map15 <- mapview(Year2003, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2004 <- squids.sf %>% 
+  filter(Year==2004)
+map16 <- mapview(Year2004, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2005 <- squids.sf %>% 
+  filter(Year==2005)
+map17 <- mapview(Year2005, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2006 <- squids.sf %>% 
+  filter(Year==2006)
+map18 <- mapview(Year2006, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2007 <- squids.sf %>% 
+  filter(Year==2007)
+map19 <- mapview(Year2007, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2008 <- squids.sf %>% 
+  filter(Year==2008)
+map20 <- mapview(Year2008, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2009 <- squids.sf %>% 
+  filter(Year==2009)
+map21 <- mapview(Year2009, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2010 <- squids.sf %>% 
+  filter(Year==2010)
+map22 <- mapview(Year2010, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2011 <- squids.sf %>% 
+  filter(Year==2011)
+map23 <- mapview(Year2011, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2012 <- squids.sf %>% 
+  filter(Year==2012)
+map24 <- mapview(Year2012, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2013 <- squids.sf %>% 
+  filter(Year==2013)
+map25 <- mapview(Year2013, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2014 <- squids.sf %>% 
+  filter(Year==2014)
+map26 <- mapview(Year2014, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2015 <- squids.sf %>% 
+  filter(Year==2015)
+map27 <- mapview(Year2015, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2016 <- squids.sf %>% 
+  filter(Year==2016)
+map28 <- mapview(Year2016, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2017 <- squids.sf %>% 
+  filter(Year==2017)
+map29 <- mapview(Year2017, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2018 <- squids.sf %>% 
+  filter(Year==2018)
+map30 <- mapview(Year2018, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+Year2019 <- squids.sf %>% 
+  filter(Year==2019)
+map31 <- mapview(Year2019, map.types = "OpenStreetMap", zcol = 'Depth', cex = 'wtcpue')
+
+
+combined_map <- map1+map2+map3+map4+map5+map6+map7+map8+map9+map10+map11+map12+map13+map14+map15+map16+map17+map18+map19+map20+map21+map22+map23+map24+map25+map26+map27+map28+map29+map30+map31
+combined_map
 ```
- 
-
 
 \newpage
 
@@ -284,7 +416,7 @@ animate(animated.plot, duration = 50, fps = 1, width = 800, height = 600)
 ## 1. Depth ~ Year
 <insert specific question here and add additional subsections for additional questions below, if needed>
 
-```{r, message=F, warning=F, echo=F}
+```{r, message=F, warning=F, echo=F, fig.height=6, fig.width=10}
 at_sea <- squids %>%
   group_by(Season,Year) %>%
   mutate(mean_dep = mean(Depth, na.rm = TRUE)
@@ -296,16 +428,15 @@ ggplot(at_sea, aes(x = Year, y=mean_dep, color = Season)) +
   geom_line() +
   geom_point() +
   labs(
-    title = "Change in Depth",
+    title = "Change in Mean Distributional Depth over Years, by Seasons",
     x = "Year",
-    y = "Depth"
+    y = "Depth (Meters)"
   ) +
   scale_y_reverse()+
-  theme(plot.title = element_text(hjust = 0.5))+
-  theme(legend.position = "right")
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r, , message=F, warning=F, echo=F}
+```{r, message=F, warning=F, include=FALSE}
 model1 <- lm(data = squids, Depth ~ Year)
 summary(model1)
 ```
@@ -313,19 +444,17 @@ summary(model1)
 
 ## 2. wtcpue ~ depth
 
-```{r, message=F, warning=F, echo=F}
+```{r, message=F, warning=F, echo=F, fig.height=6, fig.width=10}
 ggplot(data = squids, aes(y=Depth, x=wtcpue, color = Season))+
   geom_point(alpha=0.7,size=0.7)+
   scale_y_reverse()+
-  labs(title = "Vertical Distribution of Atlantic Brief Squid",
-       y = "Depth(m)",
-       x = "Weight Count per Unit Effort")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  theme(legend.position = "right")
-  xlim(0,2)
+  labs(title = "Change in Weight Catch per Unit Effort by Depth, by Seasons",
+       y = "Depth (Meters)",
+       x = "Weight Catch per Unit Effort (Kilograms/hour)")+
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r, message=F, warning=F, echo=F}
+```{r, message=F, warning=F, include=F}
 model2 <- lm(data = squids, wtcpue ~ Depth)
 summary(model2)
 ```
@@ -333,17 +462,16 @@ summary(model2)
 
 ## 3. wtcpue ~ year
 
-```{r, message=F, warning=F, echo=F}
+```{r, message=F, warning=F, echo=F, fig.height=6, fig.width=10}
 ggplot(data = squids, aes(y=wtcpue, x=Year, color = Season))+
   geom_point(alpha=0.7,size=0.7)+
-  labs(title = "Atlantic Brief Squid",
-       y = "Weight Count per Unit Effort",
+  labs(title = "Change in Weight Catch per Unit Effort over Years, by Seasons",
+       y = "Weight Catch per Unit Effort (Kilograms/hour)",
        x = "Year")+
- theme(plot.title = element_text(hjust = 0.5))+
-  theme(legend.position = "right")
+ theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r, message=F, warning=F, echo=F}
+```{r, message=F, warning=F, include=F}
 model3 <- lm(data = squids, wtcpue ~ Year)
 summary(model3)
 ```
@@ -356,10 +484,12 @@ ONE-WAY ANOVA test
 Null Hypothesis: There are no differences in the means of wtcpue among seasons.
 Alternative Hypothesis: There are differences in the means of wtcpue among seasons.
 
-```{r, , message=F, warning=F, echo=F}
+```{r, , message=F, warning=F, include=F}
 anova_result <- aov(wtcpue ~ Season, data = squids)
 summary(anova_result)
 ```
+
+Based on the result of the one-way ANOVA test: the test statistic (F value) is 73.44; the p-value associated with the test is very small (approximately < 2e-16), indicating strong evidence against the null hypothesis. Therefore, we reject the null hypothesis and conclude that there are significant differences in the means of wtcpue among seasons. This suggests that season has a significant effect on the weight catch per unit effort, implying that seasonal changes, including factors like temperature, moisture, and currents, potentially influence the squid population and biomass.
 
 \newpage
 
