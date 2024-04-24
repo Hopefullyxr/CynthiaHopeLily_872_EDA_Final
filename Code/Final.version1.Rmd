@@ -1,6 +1,7 @@
 ```{css, echo=F}
 body {
   background-color: #deebf7;
+  font-size: 20px;
 }
 ```
 ---
@@ -11,6 +12,8 @@ output:
   html_document: default
   pdf_document: default
 ---
+
+Git Repository: https://github.com/Hopefullyxr/CynthiaHopeLily_872_EDA_Final.git 
 
 ```{r setup, include=FALSE}
 # Set your working directory
@@ -92,23 +95,33 @@ squids <- filter(squids, wtcpue > 0)
 write.csv(squids, row.names = FALSE, file = here("Data/Processed/squids.csv"))
 ```
 
+<br>
 
 # Rationale and Research Questions
 
+
 Climate change is anticipated to bring about significant repercussions for marine life, including declining pH and oxygen, rising temperatures, and shifts in current patterns, affecting a diverse array of marine organisms across phylogenetic groups at both physiological and ecological levels. Cephalopods, constituting a substantial portion of the global mollusk biomass, play pivotal roles in marine food webs, offer essential ecosystem services, and possess significant economic value. Research indicates that cephalopods are susceptible to the impact of climate change, with squids particularly notable for their importance in human consumption, accounting for up to 70% of the cephalopod biomass harvested. 
 
-While most cephalopods are believed to be constrained by physiological and locomotive factors, hindering their presence in shallow, highly fluctuating, euryhaline environments, the Atlantic brief squid, or Lolliguncula brevis, stands out as an exception. This small species of squid in the Loliginidae family demonstrates remarkable adaptability, tolerating low salinities and thriving across a wide a wide range of environmental conditions, commonly found swimming in shallow waters of the western Atlantic Ocean. Such adaptability holds considerable value, especially amid the diverse environmental changes driven by climate change. However, our current understanding of the distribution of L. brevis remains limited. 
+While most cephalopods are believed to be constrained by physiological and locomotive factors, hindering their presence in shallow, highly fluctuating, euryhaline environments, **the Atlantic brief squid** [Figure 1], or Lolliguncula brevis, stands out as an exception. This small species of squid in the Loliginidae family demonstrates remarkable adaptability, tolerating low salinities and thriving across a wide a wide range of environmental conditions, commonly found swimming in shallow waters of the western Atlantic Ocean. Such adaptability holds considerable value, especially amid the diverse environmental changes driven by climate change. However, our current understanding of the distribution of L. brevis remains limited. 
 
-Our objective is to enhance our understanding of the spatial and temporal distribution patterns of the Atlantic brief squid in response to changing environmental conditions over a thirty-year period from 1989 to 2019. We gathered existing data from NOAA DisMAP to map the known distribution range of the Atlantic brief squid along the Southeast United States coastline. 
+**Our objective is to enhance our understanding of the spatial and temporal distribution patterns of the Atlantic brief squid in response to changing spatial and temporal factors over thirty years from 1989 to 2019.** We hope to get a first glance on how their possible distribution variable would account for the era’s background of climate change. We gathered existing data from NOAA DisMAP to map the known distribution range of the Atlantic brief squid along the Southeast United States coastline. 
+
+<br>
 
 ```{r, warning = F, echo=FALSE, fig.width=5, fig.height=4.5}
 photo <- readPNG(here("Data/Raw/squidphoto.jpg"))
-plot(0, 0, type = "n", bg = "#deebf7", axes = FALSE, xlab = "[Figure 1] Photo of Atlantic Brief Squid", ylab = "", xlim = c(1, 0), ylim = c(1, 0))
+plot(0, 0, type = "n", bg = "#deebf7", axes = FALSE, xlab = "[Figure 1] Photo of Atlantic Brief Squid,
+     https://naturerules1.fandom.com/wiki/Atlantic_Brief_Squid", ylab = "", xlim = c(1, 0), ylim = c(1, 0))
 rasterImage(photo, 0, 0, 1, 1)
 ```
-
+<br>
+<br>
 
 # Dataset Information
+
+
+Our data was sourced from the NOAA Distribution Mapping and Analysis Portal (DisMAP), an interactive platform that contains geographical and numerical visualization of several key metrics defining the range and distribution of individual species over time. The raw data were collected by the National Marine Fisheries Service of the National Oceanic and Atmospheric Administration during annual bottom trawl fisheries surveys. We specifically focused on the Atlantic brief squid (Lolliguncula brevis) as the species of interest, within the Southeast US as the study area, NMFS/Rutgers IDW Interpolation as study model/distribution project, and then obtained survey points data for the fall, spring, and summer seasons. The data use weight catch per unit effort (wtcpue), an indirect measure unit commonly used in fisheries and conservation biology, to indicate the abundance of a target species. 
+
 
 ```{r, message=F, warning=F, echo=F}
 data.description <- data.frame(ItemName = c("Data Source","Item", "Retrieved From", "Variable Used", "Data Range"),
@@ -118,14 +131,16 @@ colnames(data.description) <- c("Detail", "Description")
 knitr::kable(data.description, caption = "[Table 1] Dataset Information", align = c("r", "l"))
 ```
 
-Our data was sourced from NOAA Distribution Mapping and Analysis Portal (DisMAP), an interactive platform that contains geographical and numerical visualization of several key metrics defining the range and distribution of individual species over time. The raw data were collected by the National Marine Fisheries Service of the National Oceanic and Atmospheric Administration during annual bottom trawl fisheries surveys. We specifically focused on the Atlantic brief squid (Lolliguncula brevis) as the species of interest, within the Southeast US as the study area, NMFS/Rutgers IDW Interpolation as study model/distribution project, and then obtained survey points data for the fall, spring, and summer seasons. 
 
+**Data Wrangling:** In the data wrangling process, the season columns are manually generated by this study with respect to each dataset property, and then we combine datasets of three seasons into one single data frame to run further analysis. Worth noting, that the raw dataset contains many observations with squid abundance equal to zero. We think this indicates the situation that the Atlantic brief squid is not guaranteed caught in each haul. In order to make meaningful visualization and statistical results, we trimmed all zero values, and decreased the total observations from 8201 to 6778. This wrangling might lead to potential bias in the following analysis, because we might fail to capture vulnerabilities that are associated with natural low abundance of squids, which contribute to zero catchment values.
 
-
+<br>
+<br>
 
 # Exploratory Analysis 
 
 
+Initially, we decided to generate a scatterplot matrix encompassing all variables of interest in this study to gain a preliminary understanding of their relationships [Figure 2]. The significant index at a glance revealed notable correlations between changes in depth, year, squids abundance with changes in latitude. Furthermore, relationships between year, abundance, and depth also exhibited some degree of significance. Subsequently, this study undertook statistical tests to delve deeper into these relationships. 
 
 ```{r, message=F, warning=F, echo=F, fig.height=8, fig.width=12}
 plot1 <- ggpairs(squids, columns =c(3, 5, 6, 7, 8),
@@ -134,8 +149,9 @@ plot1 <- ggpairs(squids, columns =c(3, 5, 6, 7, 8),
 plot1
 ```
 
-## Table
+<br>
 
+Following this, summary statistics for the three major variables under investigation were presented in [Table 2]. The table indicates that squids are most active within a depth range of 2 to 13 meters, with an average depth of approximately 8 meters. The mean squid abundance registers around 0.25 kilograms per hour, while their latitudinal distribution spans from 28.76 to 35.23 degrees.
 
 
 ```{r, message=F, warning=F, echo=F}
@@ -151,7 +167,9 @@ rownames(variables.summary) <- c("Depth", "WTCPUE", "Latitude")
 
 knitr::kable(variables.summary, digits = 2, caption = "[Table 2] Statistical Summary of Variables, Depth, WTCPUE, Latitude")
 ```
+<br>
 
+To further investigate the variation of variables respective to different years and different seasons. This study selected the squid abundance variable, kilogram catch per fishing hour, to create more summary statistic tables. To further explore the variability of variables across different years and seasons, this study focused on the squid abundance variable, kilogram catch per fishing hour, to generate additional summary statistic tables. Although discerning trends directly from numeric changes among years may be challenging, these numbers provide valuable reference points for subsequent analyses [Table 3]. Examining abundance fluctuations across seasons revealed that mean abundance, as well as total observations, were lowest during the spring seasons [Table 4]. Notably, the spring season exhibited the least skewed abundance distribution, suggesting that fish caught during spring are typically more normally distributed.
 
 
 ```{r, message=F, warning=F, echo=F}
@@ -170,9 +188,10 @@ wtcpue.seasonal.summary <- squids %>%
 
 knitr::kable(wtcpue.seasonal.summary, digits = 2, caption = "[Table 4] Statistical Summary of WTCPUE by Season")
 ```
+<br>
 
+Then, a plot grid depicting latitude changes over years by seasons was constructed to provide an initial glimpse into squid distribution variation [Figure 3]. Mean latitude was plotted to capture a representative trend for the entire squid population, with minimum and maximum latitude within each sample depicted as light blue patches in the background of the plot. From the plot, it becomes evident that squids across all seasons and years are distributed around a mean latitude of 32 degrees, with no discernible trend observed from 1989 to 2019.
 
-## Graphing Change in Latitude
 
 ```{r, message=F, warning=F, echo=F, cache = F, fig.height=10, fig.width=10}
 # Spring
@@ -229,11 +248,11 @@ fallplot <- ggplot(at_fall, aes(x = Year)) +
   geom_line(aes(y = mean_lat), color = "red") +
   geom_point(aes(y = mean_lat), color = "red") +
   labs(
-    title = "[Figure 3] Change in Latitude over Years, by Seasons
+    title = "[Figure 3] Change in Mean Latitude over Years, by Seasons
     
     Fall",
     x = "Year",
-    y = "Latitude"
+    y = "Latitude (Degree)"
   ) +
   xlim(1989, 2020) +
   theme(legend.position = "top", plot.title = element_text(hjust = 0.5))
@@ -246,7 +265,7 @@ springplot <- ggplot(at_spr, aes(x = Year)) +
   labs(
     title = "Spring",
     x = "Year",
-    y = "Latitude"
+    y = "Latitude (Degree)"
   ) +
     xlim(1989, 2020) +
   theme(plot.title = element_text(hjust = 0.5))
@@ -259,7 +278,7 @@ summerplot <- ggplot(at_sum, aes(x = Year)) +
   labs(
     title = "Summer",
     x = "Year",
-    y = "Latitude"
+    y = "Latitude (Degree)"
   ) +
     xlim(1989, 2020) +
   theme(plot.title = element_text(hjust = 0.5))
@@ -270,7 +289,10 @@ plot_grid(fallplot,
           nrow = 3)
 ```
 
-## 3. Maping
+<br>
+
+Finally, an interactive map is created here for users to freely explore the geospatial distribution of squids based on depth and abundance. Users can manually select each year’s map by clicking to show or hide different layers. Upon observing the map, it becomes apparent that higher squid abundance (represented by larger bubbles) is frequently observed at relatively shallow depths (indicated by lighter-colored bubbles).
+
 
 ```{r, message=F, warning=F, echo=F}
 squids.sf <- squids %>% 
@@ -408,13 +430,27 @@ combined_map <- map1+map2+map3+map4+map5+map6+map7+map8+map9+map10+map11+map12+m
 combined_map
 ```
 
-\newpage
+<br>
+<br>
 
 # Analysis
 
+### 1. Depth ~ Year
 
-## 1. Depth ~ Year
-<insert specific question here and add additional subsections for additional questions below, if needed>
+**Null Hypothesis:** There is no significant relationship between year and depth.
+
+**Alternative Hypothesis:** There is a significant relationship between year and depth. 
+
+First, to examine the depth distribution of squid across different seasons (spring, summer, fall) in various years, we plot the depth against the year and run a linear regression model [Figure 4]. Throughout most of the year, squid depths typically range from 7 to 9 meters below the surface, with occasional deviations. For instance, in 1998, there was a notable shift of nearly 2 meters, rising from below 8 to around 6 meters. Additionally, in 2015, the depth of squid in fall reached its lowest point below 9 meters.These fluctuations may be influenced by the El Niño–Southern Oscillation (ENSO), impacting the North Atlantic climate, possibly through the mediation of the North Atlantic Oscillation (NAO). However, the correlation remains uncertain and contingent on specific contexts. It's worth noting that the occurrence of severe El Niño events in 1997/1998 and 2014/2015 could potentially explain the anomalous distribution of squid in those years.
+
+To explore the correlation between the change of squid depth and the change of time, we conducted a linear regression analysis. The results are as follows:
+
+**Coefficients:** The coefficient for the year variable is 0.003740, and it is statistically significant (p = 0.0462). Every increase in one year is associated with 0.003740 meters increase in depth.
+
+**Model Fit and Significance:** The adjusted R-squared value is 0.000439,  indicating that only a very small proportion of the variance in squid depth is explained by the model. However the overall model yielded a p-value of 0.04619, indicating that the model is statistically significant at the 0.05 significance level.
+
+Overall, the analysis reveals a statistically significant relationship between the year and squid depth. However, the model's explanatory capacity is quite limited, with the year variations accounting for only a small fraction of the variance (yet significant accountant) in squid depth.
+
 
 ```{r, message=F, warning=F, echo=F, fig.height=6, fig.width=10}
 at_sea <- squids %>%
@@ -428,7 +464,7 @@ ggplot(at_sea, aes(x = Year, y=mean_dep, color = Season)) +
   geom_line() +
   geom_point() +
   labs(
-    title = "Change in Mean Distributional Depth over Years, by Seasons",
+    title = "[Figure 4] Change in Mean Distributional Depth over Years, by Seasons",
     x = "Year",
     y = "Depth (Meters)"
   ) +
@@ -441,14 +477,30 @@ model1 <- lm(data = squids, Depth ~ Year)
 summary(model1)
 ```
 
+<br>
 
-## 2. wtcpue ~ depth
+### 2. wtcpue ~ depth
+
+**Null Hypothesis:** There is no significant relationship between depth change and Atlantic brief squid abundance.
+
+**Alternative Hypothesis:** There is a significant relationship between depth change and Atlantic brief squid abundance. 
+
+Next, we explore the distribution of squid abundance (weight catch per unit effort) by mapping it against depth and employing linear regression to discern differences across spring, summer, and fall [Figure 5]. Squid depth typically ranges from 5 to 11 meters, with fall and summer showing higher overall abundance compared to spring. This observation might imply either a greater number of squid during fall and summer or larger individual sizes, providing potential insights into squid reproduction and growth cycles.
+
+The linear regression analysis reveals the following results regarding the relationship between squid abundance (wtcpue) and depth: 
+
+**Coefficients:** The coefficient for the Depth variable is 0.010656, indicating that for each unit increase in depth, the squid abundance (wtcpue) increases by 0.010656 kilograms/hours. The coefficients are statistically significant, with p-values less than 0.05 (p = 0.00105).
+
+**Model Fit and Significance:** The adjusted R-squared value is 0.001435 and the p-value is 0.001054, indicating that the model is statistically significant at the 0.05 significance level. 
+
+In summary, the analysis suggests a statistically significant relationship between depth and squid abundance. However, the model's explanatory power is limited, with depth accounting for only a small fraction of the variance in squid abundance.
+
 
 ```{r, message=F, warning=F, echo=F, fig.height=6, fig.width=10}
 ggplot(data = squids, aes(y=Depth, x=wtcpue, color = Season))+
   geom_point(alpha=0.7,size=0.7)+
   scale_y_reverse()+
-  labs(title = "Change in Weight Catch per Unit Effort by Depth, by Seasons",
+  labs(title = "[Figure 5] Change in Weight Catch per Unit Effort by Depth, by Seasons",
        y = "Depth (Meters)",
        x = "Weight Catch per Unit Effort (Kilograms/hour)")+
   theme(plot.title = element_text(hjust = 0.5))
@@ -459,13 +511,26 @@ model2 <- lm(data = squids, wtcpue ~ Depth)
 summary(model2)
 ```
 
+<br>
 
-## 3. wtcpue ~ year
+### 3. wtcpue ~ year
+
+**Null Hypothesis:** There is no significant relationship between year and Atlantic brief squid abundance.
+
+**Alternative Hypothesis:** There is a significant relationship between year and Atlantic brief squid abundance. 
+
+We then examine the correlation between the change in squid abundance (wtcpue) over years by conducting a linear regression analysis. The results are as follows:
+
+**Coefficients:** The coefficient for the Year variable is -0.0002438, indicating that for every increase in one year, the wtcpue decreases by 0.0002438 kilograms/hour. However, the coefficient for Year is not statistically significant, as its p-value exceeds 0.05 (p = 0.628).
+
+**Model Fit and Significance:** The adjusted R-squared value is negative, suggesting that the model's predicted values perform worse than if the average were used as a predicted value. The p-value is 0.6276, indicating that the model is not statistically significant at the 0.05 significance level.
+
+In summary, the analysis suggests that the change in year doesn't provide a clear explanation for the variations in squid abundance, which is also suggested by [Figure 6] that no obvious relationship is indicated by points distribution over years. Given that the Atlantic Brief Squid being highly resilient, it is likely that this species adjusts its distribution to adapt to environmental changes, thereby sustaining a stable population or biomass. 
 
 ```{r, message=F, warning=F, echo=F, fig.height=6, fig.width=10}
 ggplot(data = squids, aes(y=wtcpue, x=Year, color = Season))+
   geom_point(alpha=0.7,size=0.7)+
-  labs(title = "Change in Weight Catch per Unit Effort over Years, by Seasons",
+  labs(title = "[Figure 6] Change in Weight Catch per Unit Effort over Years, by Seasons",
        y = "Weight Catch per Unit Effort (Kilograms/hour)",
        x = "Year")+
  theme(plot.title = element_text(hjust = 0.5))
@@ -476,26 +541,63 @@ model3 <- lm(data = squids, wtcpue ~ Year)
 summary(model3)
 ```
 
+<br>
 
-## 4. wtcpue ~ season
+### 4. wtcpue ~ season
 
-ONE-WAY ANOVA test
+**Based on the result of the one-way ANOVA test:** the test statistic (F value) is 73.44; the p-value associated with the test is very small (approximately < 2e-16), indicating strong evidence against the null hypothesis. Therefore, we reject the null hypothesis and conclude that there are significant differences in the means of wtcpue among seasons. This suggests that season has a significant effect on the weight catch per unit effort, implying that seasonal changes, including factors like temperature, moisture, and currents, potentially influence the squid population and biomass.
 
-Null Hypothesis: There are no differences in the means of wtcpue among seasons.
-Alternative Hypothesis: There are differences in the means of wtcpue among seasons.
 
 ```{r, , message=F, warning=F, include=F}
 anova_result <- aov(wtcpue ~ Season, data = squids)
 summary(anova_result)
 ```
 
-Based on the result of the one-way ANOVA test: the test statistic (F value) is 73.44; the p-value associated with the test is very small (approximately < 2e-16), indicating strong evidence against the null hypothesis. Therefore, we reject the null hypothesis and conclude that there are significant differences in the means of wtcpue among seasons. This suggests that season has a significant effect on the weight catch per unit effort, implying that seasonal changes, including factors like temperature, moisture, and currents, potentially influence the squid population and biomass.
-
-\newpage
+<br>
+<br>
 
 # Summary and Conclusions
 
-\newpage
+Squid plays a crucial role as food sources for both marine megafauna and humans, underscoring the necessity for their sustainable management. To enhance management efforts, we conducted a spatial and temporal distribution analysis of the Atlantic brief squid (Lolliguncula brevis), considering the biogeographic impacts of climate change. This analysis spanned a thirty-year period from 1989 to 2019 and utilized data from the NOAA Distribution Mapping and Analysis Portal (DisMAP). Our study aimed to elucidate the relationships between Atlantic brief squid abundance (wtcpue), depth, year, and season.
+
+**Key findings from our analysis include:**
+
+A significant correlation between squid abundance and depth, with higher abundance observed at greater depths. 
+
+Seasonal variations significantly influenced squid abundance, suggesting that factors such as temperature, moisture, and currents play a crucial role in shaping squid populations.
+
+
+Our study also reveals a lack of statistically significant correlation between squid abundance and year, indicating that yearly changes do not provide a clear explanation for variations in squid abundance. This finding highlights the adaptability of the Atlantic brief squid, suggesting that the species adjusts its distribution to adapt to environmental changes, thereby sustaining stable population levels or biomass.
+
+
+**There are also limitations in our study:**
+
+One limitation of our study is the potential bias introduced by the removal of observations with zero catchment values during the data wrangling process. While this step was necessary to ensure meaningful visualization and statistical analysis, it may have inadvertently excluded important information about the natural variability in squid abundance, particularly during periods of low abundance. As a result, our analysis may not fully capture the true range of variability in squid populations, potentially leading to an incomplete understanding of their distribution patterns and ecological responses.
+
+Additionally, our study focused exclusively on the Atlantic brief squid within the Southeast US, limiting the generalizability of our findings to other regions and species of cephalopods. Different species may exhibit unique ecological responses to environmental changes, and geographic variations in habitat conditions could influence squid distribution patterns in ways not captured by our analysis. Therefore, caution should be exercised when extrapolating our results to broader contexts or other cephalopod species.
+
+Furthermore, while our analysis identified significant relationships between squid abundance and certain environmental variables, such as depth and season, the explanatory power of our models was limited. This suggests that additional factors not included in our analysis may also contribute to variability in squid populations. 
+
+
+**Moving forward, future research could explore** how climate change-related factors, such as sea surface temperature, ocean acidification, and changes in primary productivity, influence the abundance and distribution of cephalopods. Advanced modeling techniques could be employed to assess the interactive effects of these environmental variables on cephalopod populations over time. Additionally, incorporating data from satellite imagery and oceanographic models could provide valuable insights into the spatiotemporal dynamics of cephalopod habitats and inform adaptive management strategies in the face of ongoing climate change.
+
+<br>
+<br>
 
 # References
-<add references here if relevant, otherwise delete this section> 
+
+Bartol, I. K., Mann, R., & Vecchione, M. (2002). Distribution of the euryhaline squid Lolliguncula brevis in Chesapeake Bay: Effects of selected abiotic factors. Marine Ecology Progress Series, 226, 235–247. https://doi.org/10.3354/meps226235
+
+DisMAP - Distribution Mapping and Analysis Portal. (n.d.). Retrieved April 20, 2024, from https://apps-st.fisheries.noaa.gov/dismap/DisMAP.html#
+
+Guerreiro, M. F., Borges, F. O., Santos, C. P., Xavier, J. C., Hoving, H.-J., & Rosa, R. (2023). Impact of climate change on the distribution and habitat suitability of the world’s main commercial squids. Marine Biology, 170(10), 129. https://doi.org/10.1007/s00227-023-04261-w
+
+Laughlin, R. A., & Livingston, R. J. (1982). Environmental and Trophic Determinants of the Spatial/Temporal Distribution of the Brief Squid (Lolliguncula Brevis) in the Apalachicola Estuary (North Florida, USA). Bulletin of Marine Science, 32(2), 489–497.
+
+US Department of Commerce, N. (n.d.). NWS Jackson, MS: El Nino and La Nina. NOAA’s National Weather Service. Retrieved April 24, 2024, from https://www.weather.gov/jan/el_nino_and_la_nina
+
+US EPA, O. (2016, July 1). Climate Change Indicators: Marine Species Distribution [Reports and Assessments]. https://www.epa.gov/climate-indicators/climate-change-indicators-marine-species-distribution
+
+Whitaker, D. (2015). Lolliguncula brevis. Species of Conservation Concern. 
+
+
